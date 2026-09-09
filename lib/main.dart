@@ -44,6 +44,18 @@ class _MyAppState extends State<MyApp> {
     print(response.body);
   }
 
+  Future<void> deleteTask(String id) async {
+    final uri = server + "deleteTask.php";
+    final response = await http.post(
+        Uri.parse(uri),
+        body: {
+          "helloworld" : id
+        }
+    );
+    getTask();
+    print(response.body);
+  }
+
   @override
   void initState() {
     getTask();
@@ -59,7 +71,24 @@ class _MyAppState extends State<MyApp> {
         children: [
           GlassGroupedSection(
             children:  List.generate(todo.length, (index){
-              return GlassListTile(title: Text(todo[index]["task"]));
+              return GlassMenu(
+                  triggerBuilder: (context, toggleMenu){
+                     return GestureDetector(
+                         behavior: HitTestBehavior.opaque,
+                         onTap: toggleMenu,
+                         child: GlassListTile(
+
+                             title: Text(todo[index]["task"])));
+                  },
+                  items: [
+
+                    GlassMenuItem(icon: Icon(CupertinoIcons.pencil), title: 'Edit', onTap: (){}),
+                    GlassMenuItem(
+                        isDestructive: true,
+                        icon: Icon(CupertinoIcons.delete), title: 'Delete', onTap: (){
+                            deleteTask(todo[index]["id"]);
+                    }),
+                  ]);
             }),
           ),
         ],
@@ -81,59 +110,64 @@ class _MyAppState extends State<MyApp> {
           return GlassScaffold(
               appBar: GlassAppBar(
                 actions: [
-                  GlassButtonGroup.icons(
-                      settings: LiquidGlassSettings(
-                        blur: 0.2
-                      ),
-                      items: [
-                      GlassButtonGroupItem.menu(
-                          menuWidth: 250,
-                          icon: Icon(CupertinoIcons.ellipsis), menuItems: [
-                        GlassMenuItem(
-                            icon: Icon(CupertinoIcons.refresh),
-                            title: 'Refresh',
-                            subtitle: 'Updated as of 9:03AM',
-                            onTap: (){}
-                        ),
-                        GlassMenuDivider(),
-                        GlassMenuItem(
-                            isDestructive: true,
-                            icon: Icon(CupertinoIcons.delete),
-                            title: 'Delete',
-                            onTap: (){}
-                        ),
-                      ]),
-                      GlassButtonGroupItem(icon: Icon(CupertinoIcons.add), onTap: (){
-                        showCupertinoDialog(context: context, builder: (context){
-                            return GlassDialog(
-                                content: GlassTextField(
-                                  controller: _task,
-                                  placeholder: 'Add Task',
-                                ),
-                                actions: [
-                              GlassDialogAction(
+                    if (selectedIndex == 0)
+                      GlassButtonGroup.icons(
+                          settings: LiquidGlassSettings(
+                              blur: 0.2
+                          ),
+                          items: [
+                            GlassButtonGroupItem.menu(
+                                menuWidth: 250,
+                                icon: Icon(CupertinoIcons.ellipsis), menuItems: [
+                              GlassMenuItem(
+                                  icon: Icon(CupertinoIcons.refresh),
+                                  title: 'Refresh',
+                                  subtitle: 'Updated as of 9:03AM',
+                                  onTap: (){
+                                    getTask();
+                                  }
+                              ),
+                              GlassMenuDivider(),
+                              GlassMenuItem(
                                   isDestructive: true,
-                                  label: 'Close',
-                                  onPressed: (){
-                                    Navigator.pop(context);
-                                  }
-                              ),
-                              GlassDialogAction(
-                                  label: 'Save',
-                                  onPressed: (){
-                                    if (_task.text != "") {
-                                      addTask();
-                                      _task.text = "";
-                                      Navigator.pop(context);
-                                    }
-                                  }
-                              ),
+                                  icon: Icon(CupertinoIcons.delete),
+                                  title: 'Delete',
+                                  onTap: (){
 
-                            ]
-                            );
-                        });
-                      }),
-                  ])
+                                  }
+                              ),
+                            ]),
+                            GlassButtonGroupItem(icon: Icon(CupertinoIcons.add), onTap: (){
+                              showCupertinoDialog(context: context, builder: (context){
+                                return GlassDialog(
+                                    content: GlassTextField(
+                                      controller: _task,
+                                      placeholder: 'Add Task',
+                                    ),
+                                    actions: [
+                                      GlassDialogAction(
+                                          isDestructive: true,
+                                          label: 'Close',
+                                          onPressed: (){
+                                            Navigator.pop(context);
+                                          }
+                                      ),
+                                      GlassDialogAction(
+                                          label: 'Save',
+                                          onPressed: (){
+                                            if (_task.text != "") {
+                                              addTask();
+                                              _task.text = "";
+                                              Navigator.pop(context);
+                                            }
+                                          }
+                                      ),
+
+                                    ]
+                                );
+                              });
+                            }),
+                          ])
                 ],
               ),
               body: pages[selectedIndex],
